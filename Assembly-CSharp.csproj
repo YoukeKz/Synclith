@@ -62,6 +62,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Scripts\ButtonEvent.cs" />
     <Compile Include="Assets\Scripts\TitleMgr.cs" />
     <Compile Include="Assets\Scripts\Token.cs" />
     <Compile Include="Assets\Scripts\Util.cs" />

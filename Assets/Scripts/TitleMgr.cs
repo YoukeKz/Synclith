@@ -7,6 +7,7 @@ public class TitleMgr : MonoBehaviour
 {
     void OnGUI()
     {
+#if False
 		Util.SetFontSize( 32 );
 
         float x = 128;
@@ -19,5 +20,6 @@ public class TitleMgr : MonoBehaviour
         if( GUI.Button( new Rect( x, y, w, h ), "START" ) ){
 			SceneManager.CreateScene( "SceneMain" );
 		}
+#endif
     }
 }

@@ -1,6 +1,56 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+public struct StateObj< T >{
+	// -----------------
+	// --- variables ---
+	int cnt;
+	T now;
+	T prev;
+	T next;
+	bool fgInit;
+	bool fgFirst;
+		
+	// ---------------
+	// --- methods ---
+	// 初期化。
+	public void Init( T state ){
+		cnt = 0;
+		now	 = state;
+		prev = state;
+		next = state;
+		fgInit = true;
+		fgFirst = false;
+	}
+	// 更新。
+	public void Update(){
+		cnt++;
+		fgFirst = false;
+		if( fgInit ){
+			cnt = 0;
+			fgInit = false;
+			prev = now;
+			now  = next;
+			next = default(T);
+			fgFirst = true;
+		}
+	}
+	// ステート変更。
+	public void ChangeState( T state ){
+		fgInit	= true;
+		next	= state;
+	}
+
+	// ----------------
+	// --- accessor ---
+	public T Now(){ return now; }
+	public T Prev(){ return prev; }
+	public T Next(){ return next; }
+	public int Cnt(){ return cnt; }
+	public bool IsFirst(){ return fgFirst; }
+};
+
+
 /// 様々なユーティリティ.
 public class Util {
 	/// Mathf.Cosの角度指定版.

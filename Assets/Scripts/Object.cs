@@ -49,6 +49,10 @@ public class Object : MonoBehaviour
 		}
     }
 
+	private void LateUpdate()
+	{
+	}
+
 	// -----------------------
 	// --- private methods ---
 	private void _StateWait(){

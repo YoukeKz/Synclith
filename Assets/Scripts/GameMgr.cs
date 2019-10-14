@@ -17,8 +17,10 @@ public class GameMgr : MonoBehaviour
 	// --- enum ---
 	// ステート。
 	enum eState{
-		Wait	, //!< 待機。
-		Move	, //!< 移動。
+		Wait		, //!< 待機。
+		Move		, //!< 移動。
+		MoveAfter	, //!< 移動後。
+		Clear		, //!< クリアに移行。
 	};	
 
 	// 移動方向。
@@ -30,6 +32,23 @@ public class GameMgr : MonoBehaviour
 		Right	, //!< 右から。
 	};
 
+	// チップの種類。
+	public enum eChip{
+		None	, //!< なし。
+		Hole	, //!< 穴。
+	};
+
+	// --------------
+	// --- struct ---
+	struct CHIP_DATA{
+		public eChip Chip;
+		public Vector2Int Pos;
+		public void Init( Vector2Int vec, eChip chip ){
+			Chip	= chip;
+			Pos		= vec;
+		}
+	};
+
 	// ----------------
 	// --- variable ---
 	private StateObj<eState> State;
@@ -37,6 +56,8 @@ public class GameMgr : MonoBehaviour
 	private CMap Cmap = new CMap();
 	private CMap.MAP_DATA mapdata;
 	private List<Object> ObjList = new List<Object>();
+	private List<Object> DestroyList = new List<Object>();
+	private List<CHIP_DATA> ChipList = new List<CHIP_DATA>();
 
 	[SerializeField] private Tilemap Tmap = new Tilemap();
 
@@ -84,8 +105,10 @@ public class GameMgr : MonoBehaviour
     {
 		State.Update();
 		switch(State.Now){
-		case eState.Wait	: _StateWait();	break;
-		case eState.Move	: _StateMove();	break;
+		case eState.Wait		: _StateWait();			break;
+		case eState.Move		: _StateMove();			break;
+		case eState.MoveAfter	: _StateMoveAfter();	break;
+		case eState.Clear		: _StateClear();		break;
 		}
 
 		if( Input.GetKeyDown( KeyCode.D ) ){
@@ -117,6 +140,30 @@ public class GameMgr : MonoBehaviour
 	// オブジェクトの登録。
 	public void Regist( Object obj ){
 		ObjList.Add( obj );
+	}
+	// オブジェクトの破棄。
+	public void DestroyObj( Object obj ){
+		DestroyList.Add( obj );
+	}
+	// チップの登録。
+	public void RegistChip( Vector2Int vec, eChip chip ){
+		var data = new CHIP_DATA();
+		data.Init( vec, chip );
+		ChipList.Add( data );
+	}
+	// チップを参照。
+	public bool IsChip( Vector2Int vec, eChip chip ){
+		foreach( CHIP_DATA data in ChipList ){
+			if( data.Pos.x != vec.x || 
+				data.Pos.y != vec.y ){
+				continue;
+			}
+
+			if( data.Chip == chip ){
+				return true;
+			}
+		}
+		return false;
 	}
 
 	// 動いても良いか。
@@ -153,9 +200,34 @@ public class GameMgr : MonoBehaviour
 			default:																									break;
 			}
 
+			// ターゲットの座標を取得する。
+			var PosList = new List<Vector2Int>();
+			foreach( Object obj in ObjList ){
+				if( !obj.IsTarget() ){ continue; }
+				PosList.Add( Util.GetVec2I( obj.transform.position ) );
+			}
+
 			// 移動を開始してもらう。
 			foreach( Object obj in ObjList ){
-				obj.SetMove( MoveDir );
+				var vPosI = Util.GetVec2I( obj.transform.position );
+				bool fgUpdate = true;
+				foreach( var vTgtPos in PosList ){
+					switch( MoveDir ){
+						case eMove.Up		: // no_break;
+						case eMove.Down		:{
+							if( vPosI.x != vTgtPos.x ){ fgUpdate = false; }
+							break;
+						}
+						case eMove.Left		: // no_break;
+						case eMove.Right	:{
+							if( vPosI.y != vTgtPos.y ){ fgUpdate = false; }
+							break;
+						}
+					}
+				}
+				if( fgUpdate ){
+					obj.SetMove( MoveDir );
+				}
 			}
 			MoveDir = eMove.None;
 		}
@@ -171,7 +243,40 @@ public class GameMgr : MonoBehaviour
 
 		// すべての移動が終了したら待機に戻る。
 		if( fgUpdateEnd ){
+			State.ChangeState( eState.MoveAfter );
+		}
+	}
+
+	// ステート/移動後。
+	private void _StateMoveAfter(){
+		foreach( Object obj in DestroyList ){
+			ObjList.Remove( obj );
+			Destroy( obj );
+		}
+		DestroyList.Clear();
+
+		bool fgClear = true;
+		foreach( Object obj in ObjList ){
+			if( obj.IsTarget() ){
+				fgClear = false;
+				break;
+			}
+		}
+
+		// クリア条件を満たしていたら、リザルトに移動する。
+		if( fgClear ){
+			State.ChangeState( eState.Clear );
+		// それ以外は、待機に戻る。
+		}else{
 			State.ChangeState( eState.Wait );
+		}
+	}
+
+	// ステート/クリアに移行。
+	private void _StateClear(){
+		if( State.Cnt > 30 ){
+			ButtonEvent btn = new ButtonEvent();
+			btn.ButtonToResult_Click();
 		}
 	}
 

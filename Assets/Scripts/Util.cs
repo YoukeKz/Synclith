@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.Assertions;
 
 public struct StateObj< T >{
 	// -----------------
@@ -43,16 +44,35 @@ public struct StateObj< T >{
 
 	// ----------------
 	// --- accessor ---
-	public T Now(){ return now; }
-	public T Prev(){ return prev; }
-	public T Next(){ return next; }
-	public int Cnt(){ return cnt; }
+	public T Now{ get{ return now; } }
+	public T Prev{ get{ return prev; } }
+	public T Next{ get{ return next; } }
+	public int Cnt{ get{ return cnt; } }
 	public bool IsFirst(){ return fgFirst; }
 };
 
 
+
 /// 様々なユーティリティ.
 public class Util {
+	public static bool Assert( bool fg, string str = "" ){
+		if( fg ){
+			UnityEngine.Assertions.Assert.IsTrue( !fg, str );
+			return true;
+		}
+		return false;
+	}
+
+	// Vectorの変換。
+	public static Vector3Int GetVec3I( Vector3 vec ){ return new Vector3Int( Mathf.RoundToInt( vec.x ), Mathf.RoundToInt( vec.y ), Mathf.RoundToInt( vec.z ) ); }
+	public static Vector3Int GetVec3I( Vector2 vec ){ return new Vector3Int( Mathf.RoundToInt( vec.x ), Mathf.RoundToInt( vec.y ), 0 ); }
+	public static Vector2Int GetVec2I( Vector3 vec ){ return new Vector2Int( Mathf.RoundToInt( vec.x ), Mathf.RoundToInt( vec.y ) ); }
+	public static Vector2Int GetVec2I( Vector2 vec ){ return new Vector2Int( Mathf.RoundToInt( vec.x ), Mathf.RoundToInt( vec.y ) ); }
+	public static Vector3 GetVec3( Vector3Int vec ){ return new Vector3( (float)vec.x, (float)vec.y, (float)vec.z ); }
+	public static Vector3 GetVec3( Vector2Int vec ){ return new Vector3( (float)vec.x, (float)vec.y, 0.0f ); }
+	public static Vector2 GetVec2( Vector3Int vec ){ return new Vector2( (float)vec.x, (float)vec.y ); }
+	public static Vector2 GetVec2( Vector2Int vec ){ return new Vector2( (float)vec.x, (float)vec.y ); }
+
 	/// Mathf.Cosの角度指定版.
 	public static float CosEx(float Deg) {
 		return Mathf.Cos(Mathf.Deg2Rad * Deg);
